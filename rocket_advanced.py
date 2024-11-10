@@ -291,12 +291,12 @@ class StarshipEnv():
         dist_y = abs(state[1] - self.target_y)
         dist_norm = dist_x / x_range + dist_y / y_range
 
-        dist_reward = 0.1*(1.0 - dist_norm)
+        dist_reward = 0.25*(1.0 - dist_norm)
 
         if abs(state[4]) <= np.pi / 6.0:
             pose_reward = 0.1
         else:
-            pose_reward = abs(state[4]) / (0.5*np.pi)
+            pose_reward = 3.* abs(state[4]) / (np.pi)
             pose_reward = 0.1 * (1.0 - pose_reward)
 
         reward = dist_reward + pose_reward

@@ -285,7 +285,8 @@ def ddpg(rocket_env, actor_critic=MLPActorCritic, ac_kwargs=dict(), seed=0,
     def get_action(o, noise_scale, act_low, act_high):
         a = ac.act(torch.as_tensor(o, dtype=torch.float32))
         a += noise_scale * np.random.randn(act_dim)
-        return act_low + (a + 1) * (act_high - act_low) / 2
+        a_rescaled = act_low + (a + 1) * (act_high - act_low) / 2
+        return np.clip(a_rescaled, act_low, act_high)
 
     def test_agent():
         for j in range(num_test_episodes):
@@ -311,8 +312,6 @@ def ddpg(rocket_env, actor_critic=MLPActorCritic, ac_kwargs=dict(), seed=0,
     for t in range(total_steps):
 
         if (episode_no % 100 == 0):
-            import pdb
-            pdb.set_trace()
             env.render()
         
         # Until start_steps have elapsed, randomly sample actions
