@@ -1,3 +1,6 @@
+
+
+
 from os import path
 from typing import Optional
 
@@ -191,6 +194,20 @@ class StarshipEnv():
 
     def _get_obs(self):
         return self.state
+    
+    def create_action_table(self):
+        f0 = 0.2 * self.g  # thrust
+        f1 = 1.0 * self.g
+        f2 = 2 * self.g
+        vphi0 = 0  # Nozzle angular velocity
+        vphi1 = 30 / 180 * np.pi
+        vphi2 = -30 / 180 * np.pi
+
+        action_table = [[f0, vphi0], [f0, vphi1], [f0, vphi2],
+                        [f1, vphi0], [f1, vphi1], [f1, vphi2],
+                        [f2, vphi0], [f2, vphi1], [f2, vphi2]
+                        ]
+        return action_table
 
     def create_random_state(self):
 
@@ -556,3 +573,5 @@ class StarshipEnv():
 
 def angle_normalize(x):
     return ((x + np.pi) % (2 * np.pi)) - np.pi
+
+
