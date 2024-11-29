@@ -238,7 +238,7 @@ for i_episode in range(num_episodes):
         if done:
             
             print('Finished episode', i_episode)
-            # plot_rewards()
+            plot_rewards()
             state_buffer_storage.append(np.array(env.state_buffer))
             action_buffer_storage.append(np.array(env.action_buffer))
             reward_buffer.append(total_reward)
