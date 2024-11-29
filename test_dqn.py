@@ -1,16 +1,16 @@
-import gymnasium as gym
 import math
 import random
 import matplotlib
 import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
-
+import pdb
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from rocket_basic import Rocket
+from rocket_discrete_action import StarshipEnvDiscrete
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
@@ -19,7 +19,7 @@ if is_ipython:
 
 plt.ion()
 
-env = Rocket()
+env = StarshipEnvDiscrete()
 
 # if GPU is to be used
 device = torch.device(
@@ -78,6 +78,7 @@ def optimize_model():
                                           batch.next_state)), device=device, dtype=torch.bool)
     non_final_next_states = torch.cat([s for s in batch.next_state
                                                 if s is not None])
+    # pdb.set_trace()
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
@@ -109,8 +110,6 @@ def optimize_model():
     torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
     optimizer.step()
 
-
-
 def select_action(state):
     global steps_done
     sample = random.random()
@@ -122,15 +121,20 @@ def select_action(state):
             # t.max(1) will return the largest column value of each row.
             # second column on max result is index of where max element was
             # found, so we pick action with the larger expected reward.
+            # print('policy action')
             return policy_net(state).max(1).indices.view(1, 1)
     else:
-        return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long)
+        # print('random action')
+        random_index = np.random.randint(0, len(env.action_space))
+        random_action = env.action_space[random_index]
+        action_tensor = torch.from_numpy(np.array(random_action))
+        return torch.tensor([[action_tensor]], device=device, dtype=torch.long)
 
     
 
-def plot_durations(show_result=False):
+def plot_rewards(show_result=False):
     plt.figure(1)
-    durations_t = torch.tensor(episode_durations, dtype=torch.float)
+    rewards = torch.tensor(reward_buffer, dtype=torch.float)
     if show_result:
         plt.title('Result')
     else:
@@ -138,10 +142,10 @@ def plot_durations(show_result=False):
         plt.title('Training...')
     plt.xlabel('Episode')
     plt.ylabel('Duration')
-    plt.plot(durations_t.numpy())
+    plt.plot(rewards.numpy())
     # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+    if len(rewards) >= 100:
+        means = rewards.unfold(0, 100, 1).mean(1).view(-1)
         means = torch.cat((torch.zeros(99), means))
         plt.plot(means.numpy())
 
@@ -169,9 +173,9 @@ TAU = 0.005
 LR = 1e-4
 
 # Get number of actions from gym action space
-n_actions = env.action_space.n
+n_actions = 9
 # Get the number of state observations
-state, info = env.reset()
+state = env.reset()
 n_observations = len(state)
 
 policy_net = DQN(n_observations, n_actions).to(device)
@@ -184,21 +188,29 @@ memory = ReplayMemory(10000)
 
 steps_done = 0
 
-episode_durations = []
+reward_buffer = []
+state_buffer_storage = []
+action_buffer_storage = []
 
 if torch.cuda.is_available() or torch.backends.mps.is_available():
     num_episodes = 600
 else:
-    num_episodes = 50
+    num_episodes = 500
 
 for i_episode in range(num_episodes):
     # Initialize the environment and get its state
-    state, info = env.reset()
+    state = env.reset()
     state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+    total_reward = 0
+    
     for t in count():
+        if (i_episode % 100 == 0):
+            env.render()
+
         action = select_action(state)
-        observation, reward, terminated, truncated, _ = env.step(action.item())
+        observation, reward, terminated, truncated = env.step(action.item())
         reward = torch.tensor([reward], device=device)
+        total_reward += reward
         done = terminated or truncated
 
         if terminated:
@@ -224,8 +236,18 @@ for i_episode in range(num_episodes):
         target_net.load_state_dict(target_net_state_dict)
 
         if done:
-            episode_durations.append(t + 1)
-            plot_durations()
+            
+            print('Finished episode', i_episode)
+            # plot_rewards()
+            state_buffer_storage.append(np.array(env.state_buffer))
+            action_buffer_storage.append(np.array(env.action_buffer))
+            reward_buffer.append(total_reward)
             break
 
+np.savez(f'data/state_buffer_storage.npz', *state_buffer_storage)
+np.savez(f'data/action_buffer_storage.npz', *action_buffer_storage)
+np.savez(f'data/reward_storage.npz', np.array(reward_buffer))
 print('Complete')
+# plot_rewards(show_result=True)
+# plt.ioff()
+# plt.show()

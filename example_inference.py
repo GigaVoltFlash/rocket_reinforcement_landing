@@ -1,5 +1,5 @@
 import torch
-from rocket import Rocket
+from rocket_basic import Rocket
 from policy import ActorCritic
 import os
 import glob

@@ -14,7 +14,7 @@ DEFAULT_X = np.pi
 DEFAULT_Y = 1.0
 
 
-class StarshipEnv():
+class StarshipEnvDiscrete():
     """
        ### Description
     Inspired by the code from the inverted pendulum in OpenAI's gym environment.
@@ -97,13 +97,11 @@ class StarshipEnv():
             path_to_bg_img = 'landing.jpg'
         self.bg_img = utils.load_bg_img(path_to_bg_img, w=self.viewport_w, h=self.viewport_h)
 
-        # This will throw a warning in tests/envs/test_envs in utils/env_checker.py as the space is not symmetric
-        #   or normalised as max_torque == 2 by default. Ignoring the issue here as the default settings are too old
-        #   to update to follow the openai gym api
-        self.action_space = Box(
-            low=np.array([0.0, -self.max_gimbal]), high=np.array([self.max_thrust, self.max_gimbal]), shape=(2,), dtype=np.float32)
+
+        self.action_table = self.create_action_table()
+        self.action_space = np.arange(9)
         # For now setting no bounds on the state observations, might need to change in the future
-        high = np.array([np.inf, np.inf, np.inf, np.inf, np.inf, np.inf], dtype=np.float32)
+        high = np.array([np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf], dtype=np.float32)
         self.observation_space = Box(low=-high, high=high, dtype=np.float32)
 
         self.state_buffer = []
@@ -124,13 +122,14 @@ class StarshipEnv():
         self._np_random = value
 
     def step(self, u):
+        
         x, y, vx, vy = self.state[0], self.state[1], self.state[2], self.state[3]
         theta, vtheta = self.state[4], self.state[5]
+        phi = self.state[6]
 
-        f, phi = u[0], u[1]
-        f = np.clip(f, -self.max_thrust, self.max_thrust)
-        phi = np.clip(phi, -self.max_gimbal, self.max_gimbal)
-        self.last_u = u
+        f, vphi = self.action_table[u]
+        self.last_u[0] = f
+        self.last_u[1] = vphi
 
         ft, fr = -f*np.sin(phi), f*np.cos(phi)
         fx = ft*np.cos(theta) - fr*np.sin(theta)
@@ -140,26 +139,32 @@ class StarshipEnv():
         ax, ay = fx-rho*vx, fy-self.g-rho*vy
         atheta = ft*self.H/2 / self.I
 
-        # Cost is currently taken to the -ve of the reward from the 
-        rewards = self.calculate_reward(self.state)
-
         # update agent
         if self.already_landing:
             vx, vy, ax, ay, theta, vtheta, atheta = 0, 0, 0, 0, 0, 0, 0
             phi, f = 0, 0
+            u = 0
 
+        self.step_id += 1
         x_new = x + vx*self.dt + 0.5 * ax * (self.dt**2)
         y_new = y + vy*self.dt + 0.5 * ay * (self.dt**2)
         vx_new, vy_new = vx + ax * self.dt, vy + ay * self.dt
         theta_new = theta + vtheta*self.dt + 0.5 * atheta * (self.dt**2)
         vtheta_new = vtheta + atheta * self.dt
+        phi = phi + self.dt*vphi
 
+        phi = max(phi, -20/180*3.1415926)
+        phi = min(phi, 20/180*3.1415926)
+
+        self.step_id += 1
+        self.state = np.array([x_new, y_new, vx_new, vy_new, theta_new, vtheta_new, phi])
+
+        rewards = self.calculate_reward(self.state)
         self.already_landing = self.check_landing_success(self.state)
         self.already_crash = self.check_crash(self.state)
 
-        self.step_id += 1
-        self.state = np.array([x_new, y_new, vx_new, vy_new, theta_new, vtheta_new])
         self.state_buffer.append(self.state)
+
         self.action_buffer.append(u)
         if self.already_crash or self.already_landing:
             done = True
@@ -225,7 +230,7 @@ class StarshipEnv():
             theta = 85 / 180 * np.pi
         vy = -50
 
-        state = np.array([x, y, 0, vy, theta, 0.0])
+        state = np.array([x, y, 0, vy, theta, 0.0, 0.0])
         return state
 
     def check_crash(self, state):
@@ -394,7 +399,7 @@ class StarshipEnv():
         polys['rocket'].append({'pts': pts, 'face_color': (100, 100, 100), 'edge_color': None})
 
         # engine work
-        f, phi = self.last_u[0], self.last_u[1]
+        f, phi = self.last_u[0], self.state[6]
         c, s = np.cos(phi), np.sin(phi)
 
         if f > 0 and f < 0.5 * self.g:

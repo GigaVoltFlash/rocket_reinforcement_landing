@@ -216,7 +216,8 @@ class Rocket(object):
         x, y, vx, vy = self.state['x'], self.state['y'], self.state['vx'], self.state['vy']
         theta, vtheta = self.state['theta'], self.state['vtheta']
         phi = self.state['phi']
-
+        import pdb
+        pdb.set_trace()
         f, vphi = self.action_table[action]
 
         ft, fr = -f*np.sin(phi), f*np.cos(phi)

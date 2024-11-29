@@ -137,8 +137,6 @@ class StarshipEnv():
         ax, ay = fx-rho*vx, fy-self.g-rho*vy
         atheta = ft*self.H/2 / self.I
 
-        # Cost is currently taken to the -ve of the reward from the 
-        rewards = self.calculate_reward(self.state)
 
         # update agent
         if self.already_landing:
@@ -151,17 +149,23 @@ class StarshipEnv():
         theta_new = theta + vtheta*self.dt + 0.5 * atheta * (self.dt**2)
         vtheta_new = vtheta + atheta * self.dt
 
+        self.step_id += 1
+        self.state = np.array([x_new, y_new, vx_new, vy_new, theta_new, vtheta_new])
+
+        # Cost is currently taken to the -ve of the reward from the 
+        rewards = self.calculate_reward(self.state)
+
         self.already_landing = self.check_landing_success(self.state)
         self.already_crash = self.check_crash(self.state)
 
-        self.step_id += 1
-        self.state = np.array([x_new, y_new, vx_new, vy_new, theta_new, vtheta_new])
         self.state_buffer.append(self.state)
         self.action_buffer.append(u)
+
         if self.already_crash or self.already_landing:
             done = True
         else:
             done = False
+
         return self._get_obs(), rewards, done, False
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):

@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from rocket import Rocket
+from rocket_basic import Rocket
 from policy import ActorCritic
 import matplotlib.pyplot as plt
 import utils
