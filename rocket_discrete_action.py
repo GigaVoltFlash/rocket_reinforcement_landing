@@ -6,7 +6,6 @@ from typing import Optional
 
 import numpy as np
 
-from boxes_for_space import Box
 import cv2
 import utils
 
@@ -78,8 +77,8 @@ class StarshipEnvDiscrete():
         self.world_y_min = -30
         self.world_y_max = 570
         self.max_thrust = 20.0 # N?
-        self.max_gimbal  = 30 * np.pi/180.0 # radians?
-        self.max_steps = 800
+        self.max_gimbal  = 20 * np.pi/180.0 # radians?
+        self.max_steps = 900
 
         # target point
         self.target_x, self.target_y, self.target_r = 0, self.H/2.0, 50
@@ -102,7 +101,6 @@ class StarshipEnvDiscrete():
         self.action_space = np.arange(9)
         # For now setting no bounds on the state observations, might need to change in the future
         high = np.array([np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf], dtype=np.float32)
-        self.observation_space = Box(low=-high, high=high, dtype=np.float32)
 
         self.state_buffer = []
         self.action_buffer = []
@@ -145,7 +143,6 @@ class StarshipEnvDiscrete():
             phi, f = 0, 0
             u = 0
 
-        self.step_id += 1
         x_new = x + vx*self.dt + 0.5 * ax * (self.dt**2)
         y_new = y + vy*self.dt + 0.5 * ay * (self.dt**2)
         vx_new, vy_new = vx + ax * self.dt, vy + ay * self.dt
@@ -153,15 +150,15 @@ class StarshipEnvDiscrete():
         vtheta_new = vtheta + atheta * self.dt
         phi = phi + self.dt*vphi
 
-        phi = max(phi, -20/180*3.1415926)
-        phi = min(phi, 20/180*3.1415926)
+        phi = max(phi, -self.max_gimbal)
+        phi = min(phi, self.max_gimbal)
 
         self.step_id += 1
         self.state = np.array([x_new, y_new, vx_new, vy_new, theta_new, vtheta_new, phi])
 
-        rewards = self.calculate_reward(self.state)
         self.already_landing = self.check_landing_success(self.state)
         self.already_crash = self.check_crash(self.state)
+        rewards = self.calculate_reward(self.state)
 
         self.state_buffer.append(self.state)
 
@@ -170,7 +167,7 @@ class StarshipEnvDiscrete():
             done = True
         else:
             done = False
-        return self._get_obs(), rewards, done, False
+        return self._get_obs(), rewards, done, self.already_landing
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
 
@@ -303,6 +300,9 @@ class StarshipEnvDiscrete():
     
     def calculate_reward(self, state):
 
+        import pdb
+        # if self.already_crash:
+        #     pdb.set_trace()
         x_range = self.world_x_max - self.world_x_min
         y_range = self.world_y_max - self.world_y_min
 
@@ -311,21 +311,25 @@ class StarshipEnvDiscrete():
         dist_y = abs(state[1] - self.target_y)
         dist_norm = dist_x / x_range + dist_y / y_range
 
-        dist_reward = 0.25*(1.0 - dist_norm)
-
-        if abs(state[4]) <= np.pi / 6.0:
+        # max reward we can get from here is 0.25
+        dist_reward = 0.1*(1.0 - dist_norm)
+    
+        if abs(state[4]) <= np.pi / 12.0:
             pose_reward = 0.1
         else:
-            pose_reward = 3.* abs(state[4]) / (np.pi)
+            pose_reward = 6.* abs(state[4]) / (np.pi)
             pose_reward = 0.1 * (1.0 - pose_reward)
-
         reward = dist_reward + pose_reward
+
+        # penalize going upwards
+        if (state[3] > 0.0):
+            reward += -0.5*state[3]
 
         v = (state[2] ** 2 + state[3] ** 2) ** 0.5
         if self.already_crash:
-            reward = (reward + 5*np.exp(-1*v/10.)) * (self.max_steps - self.step_id)
+            reward = (reward + 10*np.exp(-1*v/10.)) * (self.max_steps - self.step_id)
         if self.already_landing:
-            reward = (1.0 + 5*np.exp(-1*v/10.))*(self.max_steps - self.step_id)
+            reward = (1.0 + 10*np.exp(-1*v/10.))*(self.max_steps - self.step_id)
 
         return reward
 

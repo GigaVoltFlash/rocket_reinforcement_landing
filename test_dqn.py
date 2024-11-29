@@ -17,7 +17,8 @@ is_ipython = 'inline' in matplotlib.get_backend()
 if is_ipython:
     from IPython import display
 
-plt.ion()
+# plt.ion()
+RENDER = False
 
 env = StarshipEnvDiscrete()
 
@@ -27,7 +28,6 @@ device = torch.device(
     "mps" if torch.backends.mps.is_available() else
     "cpu"
 )
-
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
@@ -133,7 +133,6 @@ def select_action(state):
     
 
 def plot_rewards(show_result=False):
-    plt.figure(1)
     rewards = torch.tensor(reward_buffer, dtype=torch.float)
     if show_result:
         plt.title('Result')
@@ -145,11 +144,12 @@ def plot_rewards(show_result=False):
     plt.plot(rewards.numpy())
     # Take 100 episode averages and plot them too
     if len(rewards) >= 100:
-        means = rewards.unfold(0, 100, 1).mean(1).view(-1)
+        means = rewards.unfold(0, 100, 1).mean(2).view(-1)
         means = torch.cat((torch.zeros(99), means))
         plt.plot(means.numpy())
 
-    plt.pause(0.001)  # pause a bit so that plots are updated
+    plt.savefig('imgs/training_over_time.pdf')
+    plt.close()
     if is_ipython:
         if not show_result:
             display.display(plt.gcf())
@@ -183,17 +183,20 @@ target_net = DQN(n_observations, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 
 optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-memory = ReplayMemory(10000)
+memory = ReplayMemory(50000)
 
+episodes_per_epoch = 200
+epoch_no = 0
 
 steps_done = 0
 
 reward_buffer = []
 state_buffer_storage = []
 action_buffer_storage = []
+landed_episodes_in_epoch = [-1]
 
 if torch.cuda.is_available() or torch.backends.mps.is_available():
-    num_episodes = 600
+    num_episodes = 20000
 else:
     num_episodes = 500
 
@@ -204,15 +207,15 @@ for i_episode in range(num_episodes):
     total_reward = 0
     
     for t in count():
-        if (i_episode % 100 == 0):
+        if (i_episode % 100 == 0) and RENDER:
             env.render()
-
+        
         action = select_action(state)
-        observation, reward, terminated, truncated = env.step(action.item())
+        observation, reward, terminated, landed = env.step(action.item())
         reward = torch.tensor([reward], device=device)
         total_reward += reward
-        done = terminated or truncated
-
+        done = terminated
+        
         if terminated:
             next_state = None
         else:
@@ -236,18 +239,28 @@ for i_episode in range(num_episodes):
         target_net.load_state_dict(target_net_state_dict)
 
         if done:
-            
-            print('Finished episode', i_episode)
-            plot_rewards()
+            if landed:
+                landed_episodes_in_epoch.append((i_episode % episodes_per_epoch))
+            if (i_episode % 20 == 0):
+                print('Finished episode', i_episode, 'with reward ', np.array(total_reward.cpu()))
             state_buffer_storage.append(np.array(env.state_buffer))
             action_buffer_storage.append(np.array(env.action_buffer))
-            reward_buffer.append(total_reward)
+            reward_buffer.append(np.array(total_reward.cpu()))
+            if (i_episode % episodes_per_epoch == 0) and i_episode > 0.0:
+                np.savez(f'data/state_buffer_storage_{str(epoch_no)}.npz', *state_buffer_storage)
+                np.savez(f'data/action_buffer_storage_{str(epoch_no)}.npz', *action_buffer_storage)
+                np.savez(f'data/reward_storage_{str(epoch_no)}.npz', np.array(reward_buffer[epoch_no*episodes_per_epoch:(epoch_no + 1)*episodes_per_epoch]))
+                np.savez(f'data/landed_storage_{str(epoch_no)}.npz', np.array(landed_episodes_in_epoch))
+                plot_rewards()
+                state_buffer_storage = []
+                action_buffer_storage = []
+                landed_episodes_in_epoch = [-1]            
+                epoch_no += 1
+                
+                # plt.ioff()
+                
             break
 
-np.savez(f'data/state_buffer_storage.npz', *state_buffer_storage)
-np.savez(f'data/action_buffer_storage.npz', *action_buffer_storage)
-np.savez(f'data/reward_storage.npz', np.array(reward_buffer))
 print('Complete')
-# plot_rewards(show_result=True)
+plot_rewards(show_result=True)
 # plt.ioff()
-# plt.show()
