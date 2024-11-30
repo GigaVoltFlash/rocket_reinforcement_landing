@@ -14,7 +14,7 @@ device = torch.device(
 
 RENDER = False
 env = StarshipEnvDiscrete()
-PATH_FOR_WEIGHTS = 'data/policy_net_weights_4.pt'
+PATH_FOR_WEIGHTS = 'data/policy_net_weights_34.pt'
 
 
 # Get number of actions from gym action space

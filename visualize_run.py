@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.cm as cm  # for color maps
 from rocket_discrete_action import StarshipEnvDiscrete
 
-TEST = False
+TEST = True
 
 
 
@@ -30,7 +30,7 @@ if TEST:
         env.render()
 
 else:
-    File_no = 5
+    File_no = 35
     data = np.load(f'data/state_buffer_storage_{File_no}.npz')
     action = np.load(f'data/action_buffer_storage_{File_no}.npz')
     reward = np.load(f'data/reward_storage_{File_no}.npz')
