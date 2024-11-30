@@ -312,24 +312,29 @@ class StarshipEnvDiscrete():
         dist_norm = dist_x / x_range + dist_y / y_range
 
         # max reward we can get from here is 0.25
-        dist_reward = 0.1*(1.0 - dist_norm)
+        dist_reward = 0.5*(1.0 - dist_norm)
     
         if abs(state[4]) <= np.pi / 12.0:
             pose_reward = 0.1
         else:
             pose_reward = 6.* abs(state[4]) / (np.pi)
             pose_reward = 0.1 * (1.0 - pose_reward)
+
+        v = (state[2] ** 2 + state[3] ** 2) ** 0.5
+        # vel_reward = 0.1*(50.0 - v)/50.0 * self.step_id/self.max_steps
         reward = dist_reward + pose_reward
 
         # penalize going upwards
         if (state[3] > 0.0):
             reward += -0.5*state[3]
 
-        v = (state[2] ** 2 + state[3] ** 2) ** 0.5
         if self.already_crash:
-            reward = (reward + 10*np.exp(-1*v/10.)) * (self.max_steps - self.step_id)
+            reward = (reward + 5*np.exp(-v/5.))*(self.max_steps - self.step_id)/self.max_steps
         if self.already_landing:
-            reward = (1.0 + 10*np.exp(-1*v/10.))*(self.max_steps - self.step_id)
+            reward = (5.0 + 5*np.exp(-v/5.))*(self.max_steps - self.step_id)/self.max_steps
+
+        # if self.already_landing:
+        #     reward = 1.0    
 
         return reward
 

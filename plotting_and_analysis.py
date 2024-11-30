@@ -11,7 +11,7 @@ import matplotlib.cm as cm  # for color maps
 fig,ax = plt.subplots()
 fig2,ax2 = plt.subplots()
 cmap = cm.viridis  # You can use other colormaps, like cm.plasma, cm.inferno, etc.
-norm = plt.Normalize(vmin=-200.0, vmax=400.0)  # Normalize z values for color mapping
+norm = plt.Normalize(vmin=-100.0, vmax=200.0)  # Normalize z values for color mapping
 # data = np.load(f'data/state_buffer_storage.npz')
 # action = np.load(f'data/action_buffer_storage.npz')
 # reward = np.load(f'data/reward_storage.npz')
@@ -19,7 +19,7 @@ norm = plt.Normalize(vmin=-200.0, vmax=400.0)  # Normalize z values for color ma
 #     ax.plot(data[element][:, 0], data[element][:, 1], color=cmap(norm(reward['arr_0'][i])))
     # ax2.plot(data[element][:, 1], np.rad2deg(data[element][:, 4]), color=cmap(norm(reward['arr_0'][i])))
 
-for i in range(85, 90):
+for i in range(7, 9):
     data = np.load(f'data/state_buffer_storage_{i}.npz')
     action = np.load(f'data/action_buffer_storage_{i}.npz')
     reward = np.load(f'data/reward_storage_{i}.npz')
