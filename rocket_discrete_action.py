@@ -309,7 +309,7 @@ class StarshipEnvDiscrete():
         # dist between agent and target point
         dist_x = abs(state[0] - self.target_x)
         dist_y = abs(state[1] - self.target_y)
-        dist_norm = dist_x / x_range + dist_y / y_range
+        dist_norm = 1.3*dist_x / x_range + 0.7*dist_y / y_range
 
         # max reward we can get from here is 0.25
         dist_reward = 0.5*(1.0 - dist_norm)
@@ -331,7 +331,7 @@ class StarshipEnvDiscrete():
         if self.already_crash:
             reward = (reward + 5*np.exp(-v/5.))*(self.max_steps - self.step_id)/self.max_steps
         if self.already_landing:
-            reward = (5.0 + 5*np.exp(-v/5.))*(self.max_steps - self.step_id)/self.max_steps
+            reward = (10.0 + 5*np.exp(-v/5.))*(self.max_steps - self.step_id)/self.max_steps
 
         # if self.already_landing:
         #     reward = 1.0    
