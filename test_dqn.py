@@ -196,7 +196,7 @@ action_buffer_storage = []
 landed_episodes_in_epoch = [-1]
 
 if torch.cuda.is_available() or torch.backends.mps.is_available():
-    num_episodes = 20000
+    num_episodes = 5000
 else:
     num_episodes = 500
 
@@ -251,16 +251,14 @@ for i_episode in range(num_episodes):
                 np.savez(f'data/action_buffer_storage_{str(epoch_no)}.npz', *action_buffer_storage)
                 np.savez(f'data/reward_storage_{str(epoch_no)}.npz', np.array(reward_buffer[epoch_no*episodes_per_epoch:(epoch_no + 1)*episodes_per_epoch]))
                 np.savez(f'data/landed_storage_{str(epoch_no)}.npz', np.array(landed_episodes_in_epoch))
+                torch.save(policy_net.state_dict(), f'data/policy_net_weights_{str(epoch_no)}.pt')
                 plot_rewards()
                 state_buffer_storage = []
                 action_buffer_storage = []
                 landed_episodes_in_epoch = [-1]            
                 epoch_no += 1
                 
-                # plt.ioff()
-                
             break
 
 print('Complete')
 plot_rewards(show_result=True)
-# plt.ioff()
