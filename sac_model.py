@@ -35,11 +35,10 @@ class ReplayMemory(object):
     def __len__(self):
         return len(self.memory)
     
-
-class DQN(nn.Module):
+class MLP(nn.Module):
 
     def __init__(self, n_observations, n_actions):
-        super(DQN, self).__init__()
+        super(MLP, self).__init__()
         self.layer1 = nn.Linear(n_observations, 128)
         self.layer2 = nn.Linear(128, 128)
         self.layer3 = nn.Linear(128, n_actions)
@@ -48,6 +47,22 @@ class DQN(nn.Module):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         return self.layer3(x)
+
+class SAC(nn.Module):
+
+    def __init__(self, n_observations, n_actions):
+        super(SAC, self).__init__()
+        # actor: takes in state, outputs action space. We take the max of last array.
+        # critic: takes in state, outputs value function output, so single output.
+        self.actor = MLP(n_observations, n_actions)
+        self.critic = MLP(n_observations, 1)
+        self.softmax = nn.Softmax(-1) # softmax to use on action
+
+    def forward(self, state):
+        self.action_probs = self.softmax(self.actor.forward(state))
+        self.state_value = self.critic(state)
+        
+        return self.action_probs, self.state_value
 
 class ModelArch():
 
@@ -74,9 +89,7 @@ class ModelArch():
         self.n_observations = n_observations
         self.env_action_space = env_action_space
 
-        self.policy_net = DQN(n_observations, n_actions).to(device)
-        self.target_net = DQN(n_observations, n_actions).to(device)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.policy_net = SAC(n_observations, n_actions).to(device)
 
         self.optimizer = optim.AdamW(self.policy_net.parameters(), lr=self.LR, amsgrad=True)
         self.memory = ReplayMemory(50000)
