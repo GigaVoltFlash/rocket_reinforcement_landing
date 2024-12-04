@@ -14,8 +14,8 @@ if TEST:
     landed = np.load(f'test_data/landed_storage.npz')
 
     print('Landed runs: ', landed['arr_0'].squeeze())
-    run_no = np.argmax(reward['arr_0'].squeeze())
-    # run_no = 20
+    # run_no = np.argmax(reward['arr_0'].squeeze())
+    run_no = 1
     print('Max reward = ', np.max(reward['arr_0'].squeeze()))
     state_data = data[f'arr_{run_no}']
     action_data = action[f'arr_{run_no}']

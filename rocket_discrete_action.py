@@ -65,7 +65,7 @@ class StarshipEnvDiscrete():
     * v0: Initial versions release (1.0.0)
 
     """
-    def __init__(self, path_to_bg_img=None):
+    def __init__(self, path_to_bg_img=None, wind_profile_path=None):
 
         self.g = 9.8
         self.H = 50  # rocket height (meters)
@@ -79,6 +79,7 @@ class StarshipEnvDiscrete():
         self.max_thrust = 20.0 # N?
         self.max_gimbal  = 20 * np.pi/180.0 # radians?
         self.max_steps = 900
+        self.wind_file = wind_profile_path
 
         # target point
         self.target_x, self.target_y, self.target_r = 0, self.H/2.0, 50
@@ -96,11 +97,12 @@ class StarshipEnvDiscrete():
             path_to_bg_img = 'landing.jpg'
         self.bg_img = utils.load_bg_img(path_to_bg_img, w=self.viewport_w, h=self.viewport_h)
 
-
+        self.wind_table = None
+        if wind_profile_path is not None:
+            self.wind_table = np.genfromtxt(wind_profile_path, delimiter=',', skip_header=1)
+            
         self.action_table = self.create_action_table()
         self.action_space = np.arange(9)
-        # For now setting no bounds on the state observations, might need to change in the future
-        high = np.array([np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf], dtype=np.float32)
 
         self.state_buffer = []
         self.action_buffer = []
@@ -133,8 +135,13 @@ class StarshipEnvDiscrete():
         fx = ft*np.cos(theta) - fr*np.sin(theta)
         fy = ft*np.sin(theta) + fr*np.cos(theta)
 
+        if self.wind_table is not None:
+            wind_force = np.interp(y, self.wind_table[:, 0], self.wind_table[:, 1])
+        else:
+            wind_force = 0.0
+
         rho = 1 / (125/(self.g/2.0))**0.5  # suppose after 125 m free fall, then air resistance = mg
-        ax, ay = fx-rho*vx, fy-self.g-rho*vy
+        ax, ay = fx-rho*vx + wind_force, fy-self.g-rho*vy
         atheta = ft*self.H/2 / self.I
 
         # update agent
@@ -300,9 +307,6 @@ class StarshipEnvDiscrete():
     
     def calculate_reward(self, state):
 
-        import pdb
-        # if self.already_crash:
-        #     pdb.set_trace()
         x_range = self.world_x_max - self.world_x_min
         y_range = self.world_y_max - self.world_y_min
 
