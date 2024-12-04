@@ -1,6 +1,6 @@
 # Testing RL policies for Rocket Landing in Different Simulated Wind Conditions
 
-The simulation environment for this project was taken from Zhengxia Zou's rocket-recycling project, which does a a great job at modeling a simplified version of the rocket dynamics involved, setting up a discrete action table, and a human viewable rendering of the system.
+The simulation environment for this project was taken from Zhengxia Zou's rocket-recycling project {https://github.com/jiupinjia/rocket-recycling}, which does a a great job at modeling a simplified version of the rocket dynamics involved, setting up a discrete action table, and a human viewable rendering of the system.
 
 The reward function was inspired by some of Zou's work, although noticeable modifications were made.
 
