@@ -4,18 +4,25 @@ import matplotlib.cm as cm  # for color maps
 from rocket_discrete_action import StarshipEnvDiscrete
 
 TEST = True
+WIND_EVALUATION = True
 
 
 
 if TEST:
-    data = np.load(f'test_data/state_buffer_storage.npz')
-    action = np.load(f'test_data/action_buffer_storage.npz')
-    reward = np.load(f'test_data/reward_storage.npz')
-    landed = np.load(f'test_data/landed_storage.npz')
+    if WIND_EVALUATION:
+        data = np.load(f'wind_evaluations_with_nowind_policy/state_buffer_storage_5.npz')
+        action = np.load(f'wind_evaluations_with_nowind_policy/action_buffer_storage_5.npz')
+        reward = np.load(f'wind_evaluations_with_nowind_policy/reward_storage_5.npz')
+        landed = np.load(f'wind_evaluations_with_nowind_policy/landed_storage_5.npz')
+    else:
+        data = np.load(f'test_data/state_buffer_storage_nowind.npz')
+        action = np.load(f'test_data/action_buffer_storage_nowind.npz')
+        reward = np.load(f'test_data/reward_storage_nowind.npz')
+        landed = np.load(f'test_data/landed_storage_nowind.npz')
 
     print('Landed runs: ', landed['arr_0'].squeeze())
     # run_no = np.argmax(reward['arr_0'].squeeze())
-    run_no = 1
+    run_no = 5
     print('Max reward = ', np.max(reward['arr_0'].squeeze()))
     state_data = data[f'arr_{run_no}']
     action_data = action[f'arr_{run_no}']

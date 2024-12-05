@@ -24,7 +24,7 @@ def evaluate_dqn(wind_path=None, weights_path='dqn_results/policy_net_weights_34
 
     model = ModelArch(n_actions, n_observations, env.action_space)
     # Load existing policy in to test
-    model.policy_net.load_state_dict(torch.load(weights_path, weights_only=True))
+    model.policy_net.load_state_dict(torch.load(weights_path, weights_only=True, map_location=device))
     model.policy_net.eval()
 
     steps_done = 0
