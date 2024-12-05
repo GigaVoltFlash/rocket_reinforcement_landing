@@ -123,6 +123,8 @@ success_label_test = np.load('./wind_evaluations_with_nowind_policy_test/success
 success_label_train_logic = np.where(success_label_train > 90, 1.0, 0.0)
 success_label_test_logic = np.where(success_label_test > 90, 1.0, 0.0)
 
+import pdb
+pdb.set_trace()
 # LINEAR REGRESSION
 # u = pca(train_winds[:, :, 1], k=5)
 # u = np.eye(100)

@@ -7,9 +7,9 @@ fig,ax = plt.subplots()
 fig2,ax2 = plt.subplots()
 cmap = cm.viridis  # You can use other colormaps, like cm.plasma, cm.inferno, etc.
 norm = plt.Normalize(vmin=-100.0, vmax=200.0)  # Normalize z values for color mapping
-data = np.load(f'wind_evaluations_with_nowind_policy/state_buffer_storage_5.npz')
-action = np.load(f'wind_evaluations_with_nowind_policy/action_buffer_storage_5.npz')
-reward = np.load(f'wind_evaluations_with_nowind_policy/reward_storage_5.npz')
+data = np.load(f'wind_evaluations_with_nowind_policy/state_buffer_storage_11.npz')
+action = np.load(f'wind_evaluations_with_nowind_policy/action_buffer_storage_11.npz')
+reward = np.load(f'wind_evaluations_with_nowind_policy/reward_storage_11.npz')
 for i, element in enumerate(data):
     ax.plot(data[element][:, 0], data[element][:, 1], color=cmap(norm(reward['arr_0'][i])))
     ax2.plot(data[element][:, 1], np.rad2deg(data[element][:, 4]), color=cmap(norm(reward['arr_0'][i])))

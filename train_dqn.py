@@ -8,7 +8,7 @@ from utils_dqn import plot_rewards
 
 RENDER = False
 
-env = StarshipEnvDiscrete()
+env = StarshipEnvDiscrete(wind_profile_path='./wind_data/wind_profile_11.csv')
 
 # if GPU is to be used
 device = torch.device(
