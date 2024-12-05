@@ -27,7 +27,6 @@ def evaluate_dqn(wind_path=None, weights_path='dqn_results/policy_net_weights_34
     model.policy_net.load_state_dict(torch.load(weights_path, weights_only=True, map_location=device))
     model.policy_net.eval()
 
-    steps_done = 0
     reward_buffer = []
     state_buffer_storage = []
     action_buffer_storage = []

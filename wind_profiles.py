@@ -77,7 +77,7 @@ def plot_wind_profiles_from_csv(csv_folder=".", num_profiles=10):
 
 if __name__ == '__main__':
     # Generate 10 wind profiles and save them
-    generate_wind_profile(num_profiles=50)
+    generate_wind_profile(num_profiles=200)
 
     # Example usage: Assuming CSV files are in the current directory
-    plot_wind_profiles_from_csv(num_profiles=50)
+    plot_wind_profiles_from_csv(num_profiles=200)
