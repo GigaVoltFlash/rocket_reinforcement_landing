@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.cm as cm  # for color maps
 from wind_profiles import generate_smooth_profile
 from sklearn import tree
+from sklearn.decomposition import PCA
 
 # Load wind files from wind database
 def load_wind_profiles(num_profiles=200, test=False):
@@ -65,15 +66,15 @@ def add_intercept(x):
     return new_x
 
 # Perform Principal Component Analysis to reduce the dimensionality of the wind data
-def pca(x, k=2):
-    # x is expected to be of dimensions m x n (m is number of datapoints, n is number of features)
-    x_mean = np.mean(x, axis=0)
-    x_std = np.std(x, axis=0)
-    x_norm = (x - x_mean)/x_std
-    x_cov = np.cov(x_norm.T)
-    U, S, Vt = np.linalg.svd(x_cov)
-    u_vectors = Vt[:k]
-    return u_vectors
+# def pca(x, k=2):
+#     # x is expected to be of dimensions m x n (m is number of datapoints, n is number of features)
+#     x_mean = np.mean(x, axis=0)
+#     x_std = np.std(x, axis=0)
+#     x_norm = (x - x_mean)/x_std
+#     x_cov = np.cov(x_norm.T)
+#     U, S, Vt = np.linalg.svd(x_cov)
+#     u_vectors = Vt[:k]
+#     return u_vectors
 
 # Class for linear regression definitions
 class WindLinearRegression():
@@ -165,61 +166,88 @@ windy_success_label_test_logic = np.where(windy_success_label_test > 90, 1.0, 0.
 
 # LOGISTIC REGRESSION
 # Initialize and fit regression on train data
-# theta = logistic_regression(train_winds[:40, :, 1], success_label_train_logic[:40])
-# y_predict = 1. / (1 + np.exp(-(train_winds[:40, :, 1]).dot(theta)))
+# theta = logistic_regression(train_winds[:, 20:30, 1], success_label_train_logic)
+# y_predict = 1. / (1 + np.exp(-(train_winds[:, 20:30, 1]).dot(theta)))
 # print(y_predict)
-# print(success_label_train_logic[:40])
-# print(np.sqrt(np.mean((success_label_train_logic[:40] - np.clip(y_predict, 0.0, 1.0))**2)))
+# print(success_label_train_logic)
+# print(np.sqrt(np.mean((success_label_train_logic - np.clip(y_predict, 0.0, 1.0))**2)))
 
-# y_predict = 1. / (1 + np.exp(-(test_winds[:, :, 1]).dot(theta)))
+# y_predict = 1. / (1 + np.exp(-(test_winds[:, 20:30, 1]).dot(theta)))
 # print(y_predict)
 # print(success_label_test_logic)
 # print(np.sqrt(np.mean((success_label_test_logic - np.clip(y_predict, 0.0, 1.0))**2)))
 # print(theta)
 # fig = plt.figure()
-# plt.plot(train_winds[0, :, 0], theta)
+# plt.plot(train_winds[0, 20:30, 0], theta)
 # plt.grid()
 # plt.xlabel('Altitude of wind value (m)')
 # plt.ylabel('Normalized importance to success percentage')
 # plt.show()
 
+
+# PCA WIND DIMENSIONS TO TWO DIMENSIONS
+pca = PCA(n_components=2)
+transformed_data = pca.fit_transform(train_winds[:, :, 1])
+transformed_test_data = pca.fit_transform(test_winds[:, :, 1])
+# Plotting the transformed data
+plt.scatter(transformed_data[:, 0], transformed_data[:, 1], c=success_label_train_logic)
+plt.title('PCA of 100-dimension wind profiles')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('Success (>90%) classified over the reduced dimension profiles.')
+plt.colorbar()
+plt.savefig('./imgs/pca_wind_data.pdf')
+
+# LOGISTIC REGRESSION REDUCED
+# pca = PCA(n_components=2)
+# transformed_data = pca.fit_transform(train_winds[:, :, 1])
+# transformed_test_data = pca.fit_transform(test_winds[:, :, 1])
+# theta = logistic_regression(transformed_data, success_label_train_logic)
+# y_predict = 1. / (1 + np.exp(-(transformed_data).dot(theta)))
+# print(y_predict)
+# print(success_label_train_logic)
+# print(np.sqrt(np.mean((success_label_train_logic - np.clip(y_predict, 0.0, 1.0))**2)))
+
+# y_predict = 1. / (1 + np.exp(-(transformed_test_data).dot(theta)))
+# print(y_predict)
+# print(success_label_test_logic)
+# print(np.sqrt(np.mean((success_label_test_logic - np.clip(y_predict, 0.0, 1.0))**2)))
+# print(theta)
+# fig = plt.figure()
+# plt.plot(train_winds[0, 20:30, 0], theta)
+# plt.grid()
+# plt.xlabel('Altitude of wind value (m)')
+# plt.ylabel('Normalized importance to success percentage')
+# plt.show()
+
+
+
 # DECISION TREE SKLEARN (WORKS)
-# from sklearn import tree
-# clf = tree.DecisionTreeClassifier()
-# clf = clf.fit(train_winds[:, :, 1], success_label_train_logic)
-# y_predict = clf.predict(train_winds[:, :, 1])
-# print(np.sqrt(np.mean((success_label_train_logic- np.clip(y_predict, 0.0, 1.0))**2)))
 
-# y_predict = clf.predict(test_winds[:, :, 1])
-# print(np.sqrt(np.mean((success_label_test_logic- np.clip(y_predict, 0.0, 1.0))**2)))
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(train_winds[:, :, 1], success_label_train_logic)
+y_predict = clf.predict(train_winds[:, :, 1])
+print(np.sqrt(np.mean((success_label_train_logic- np.clip(y_predict, 0.0, 1.0))**2)))
 
-# tree.plot_tree(clf)
+y_predict = clf.predict(test_winds[:, :, 1])
+print(np.sqrt(np.mean((success_label_test_logic- np.clip(y_predict, 0.0, 1.0))**2)))
+
+plt.figure(figsize=(10, 8)) 
+tree.plot_tree(clf)
+plt.savefig('./imgs/decision_tree_classifier.pdf') 
+
 
 # #### PLOTTING ###
-fig = plt.figure()
-plt.plot(np.arange(len(success_label_train))+1, success_label_train)
-plt.grid()
-# plt.show()
-fig = plt.figure()
-plt.scatter(mean_wind, success_label_train)
-plt.grid()
-plt.xlabel('Mean wind force (N)')
-# plt.show()
 fig = plt.figure()
 plt.scatter(high_alt_values, success_label_train)
 plt.grid()
 plt.xlabel('High altitude mean force (N)')
-# plt.show()
+plt.savefig('./imgs/high_alt_success.pdf')
 fig = plt.figure()
 plt.scatter(mid_alt_values, success_label_train)
 plt.grid()
 plt.xlabel('Low altitude mean force (N)')
-plt.show()
-fig = plt.figure()
-plt.scatter(range_in_wind, success_label_train)
-plt.grid()
-plt.xlabel('Range in wind (N)')
-# plt.show()
+plt.savefig('./imgs/low_alt_success.pdf')
 
 # No wind Policy
 fig,ax = plt.subplots()
