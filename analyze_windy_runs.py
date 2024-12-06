@@ -123,8 +123,14 @@ success_label_test = np.load('./wind_evaluations_with_nowind_policy_test/success
 success_label_train_logic = np.where(success_label_train > 90, 1.0, 0.0)
 success_label_test_logic = np.where(success_label_test > 90, 1.0, 0.0)
 
-import pdb
-pdb.set_trace()
+
+# Successes over windy policy
+windy_success_label_train = np.load('./wind_evaluations_with_windy_policy/success_with_different_winds.npz')['arr_0']
+windy_success_label_test = np.load('./wind_evaluations_with_windy_policy_test/success_with_different_winds.npz')['arr_0']
+
+windy_success_label_train_logic = np.where(windy_success_label_train > 90, 1.0, 0.0)
+windy_success_label_test_logic = np.where(windy_success_label_test > 90, 1.0, 0.0)
+
 # LINEAR REGRESSION
 # u = pca(train_winds[:, :, 1], k=5)
 # u = np.eye(100)
@@ -215,6 +221,7 @@ plt.grid()
 plt.xlabel('Range in wind (N)')
 # plt.show()
 
+# No wind Policy
 fig,ax = plt.subplots()
 cmap = cm.viridis  # You can use other colormaps, like cm.plasma, cm.inferno, etc.
 norm = plt.Normalize(vmin=0.0, vmax=100.0)  # Normalize z values for color mapping
@@ -228,4 +235,19 @@ ax.grid()
 ax.set_xlabel('Wind lateral force (N)')
 ax.set_ylabel('Altitude (m)')
 fig.savefig('imgs/success_of_different_winds.pdf')
+
+# Windy Policy
+fig,ax = plt.subplots()
+cmap = cm.viridis  # You can use other colormaps, like cm.plasma, cm.inferno, etc.
+norm = plt.Normalize(vmin=0.0, vmax=100.0)  # Normalize z values for color mapping
+for i in range(train_winds.shape[0]):
+    ax.plot(train_winds[i, :, 1], train_winds[i, :, 0], color=cmap(norm(windy_success_label_train[i])))
+
+sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+sm.set_array([])  # Only needed to add the color bar; no data passed here
+plt.colorbar(sm, ax=ax, label='Success probability')
+ax.grid()
+ax.set_xlabel('Wind lateral force (N)')
+ax.set_ylabel('Altitude (m)')
+fig.savefig('imgs/success_of_different_winds_windy.pdf')
 
