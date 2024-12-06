@@ -123,8 +123,8 @@ success_label_test = np.load('./wind_evaluations_with_nowind_policy_test/success
 success_label_train_logic = np.where(success_label_train > 90, 1.0, 0.0)
 success_label_test_logic = np.where(success_label_test > 90, 1.0, 0.0)
 
-import pdb
-pdb.set_trace()
+# import pdb
+# pdb.set_trace()
 # LINEAR REGRESSION
 # u = pca(train_winds[:, :, 1], k=5)
 # u = np.eye(100)
@@ -159,19 +159,19 @@ pdb.set_trace()
 
 # LOGISTIC REGRESSION
 # Initialize and fit regression on train data
-# theta = logistic_regression(train_winds[:40, :, 1], success_label_train_logic[:40])
-# y_predict = 1. / (1 + np.exp(-(train_winds[:40, :, 1]).dot(theta)))
+# theta = logistic_regression(train_winds[:, 20:30, 1], success_label_train_logic)
+# y_predict = 1. / (1 + np.exp(-(train_winds[:, 20:30, 1]).dot(theta)))
 # print(y_predict)
-# print(success_label_train_logic[:40])
-# print(np.sqrt(np.mean((success_label_train_logic[:40] - np.clip(y_predict, 0.0, 1.0))**2)))
+# print(success_label_train_logic)
+# print(np.sqrt(np.mean((success_label_train_logic - np.clip(y_predict, 0.0, 1.0))**2)))
 
-# y_predict = 1. / (1 + np.exp(-(test_winds[:, :, 1]).dot(theta)))
+# y_predict = 1. / (1 + np.exp(-(test_winds[:, 20:30, 1]).dot(theta)))
 # print(y_predict)
 # print(success_label_test_logic)
 # print(np.sqrt(np.mean((success_label_test_logic - np.clip(y_predict, 0.0, 1.0))**2)))
 # print(theta)
 # fig = plt.figure()
-# plt.plot(train_winds[0, :, 0], theta)
+# plt.plot(train_winds[0, 20:30, 0], theta)
 # plt.grid()
 # plt.xlabel('Altitude of wind value (m)')
 # plt.ylabel('Normalized importance to success percentage')
@@ -179,15 +179,15 @@ pdb.set_trace()
 
 # DECISION TREE SKLEARN (WORKS)
 # from sklearn import tree
-# clf = tree.DecisionTreeClassifier()
-# clf = clf.fit(train_winds[:, :, 1], success_label_train_logic)
-# y_predict = clf.predict(train_winds[:, :, 1])
-# print(np.sqrt(np.mean((success_label_train_logic- np.clip(y_predict, 0.0, 1.0))**2)))
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(train_winds[:, :, 1], success_label_train_logic)
+y_predict = clf.predict(train_winds[:, :, 1])
+print(np.sqrt(np.mean((success_label_train_logic- np.clip(y_predict, 0.0, 1.0))**2)))
 
-# y_predict = clf.predict(test_winds[:, :, 1])
-# print(np.sqrt(np.mean((success_label_test_logic- np.clip(y_predict, 0.0, 1.0))**2)))
+y_predict = clf.predict(test_winds[:, :, 1])
+print(np.sqrt(np.mean((success_label_test_logic- np.clip(y_predict, 0.0, 1.0))**2)))
 
-# tree.plot_tree(clf)
+tree.plot_tree(clf)
 
 # #### PLOTTING ###
 fig = plt.figure()
