@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.cm as cm  # for color maps
 from rocket_discrete_action import StarshipEnvDiscrete
 
-TEST = True
+TEST = False
 WIND_EVALUATION = True
 
 
@@ -37,7 +37,21 @@ if TEST:
         env.render()
 
 else:
-    File_no = 35
+    best_policy = 0
+    largest_lands = 0
+    for i in range(49):
+        landed = np.load(f'data/landed_storage_{i}.npz')
+        landed_runs = landed['arr_0']
+        if landed_runs is None:
+            continue
+        else:
+            num_landed = len(landed_runs)
+            if num_landed > largest_lands:
+                largest_lands = num_landed
+                best_policy = i
+    print(best_policy)
+    print(largest_lands)
+    File_no = 44
     data = np.load(f'data/state_buffer_storage_{File_no}.npz')
     action = np.load(f'data/action_buffer_storage_{File_no}.npz')
     reward = np.load(f'data/reward_storage_{File_no}.npz')
