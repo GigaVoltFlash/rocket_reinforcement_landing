@@ -173,5 +173,5 @@ dqn_results/
 dqn_results_wind/
 wind_evaluations_with_nowind_policy/
 wind_evaluations_with_nowind_policy_test/
-wind_evaluations_with_windly_policy/
+wind_evaluations_with_windy_policy/
 wind_evaluations_with_windy_policy_test/
