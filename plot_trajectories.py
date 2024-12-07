@@ -6,10 +6,10 @@ import matplotlib.cm as cm  # for color maps
 fig,ax = plt.subplots()
 fig2,ax2 = plt.subplots()
 cmap = cm.viridis  # You can use other colormaps, like cm.plasma, cm.inferno, etc.
-norm = plt.Normalize(vmin=-100.0, vmax=200.0)  # Normalize z values for color mapping
-data = np.load(f'wind_evaluations_with_nowind_policy/state_buffer_storage_11.npz')
-action = np.load(f'wind_evaluations_with_nowind_policy/action_buffer_storage_11.npz')
-reward = np.load(f'wind_evaluations_with_nowind_policy/reward_storage_11.npz')
+norm = plt.Normalize(vmin=00.0, vmax=1000.0)  # Normalize z values for color mapping
+data = np.load(f'wind_evaluations_with_windy_policy/state_buffer_storage_11.npz')
+action = np.load(f'wind_evaluations_with_windy_policy/action_buffer_storage_11.npz')
+reward = np.load(f'wind_evaluations_with_windy_policy/reward_storage_11.npz')
 for i, element in enumerate(data):
     ax.plot(data[element][:, 0], data[element][:, 1], color=cmap(norm(reward['arr_0'][i])))
     ax2.plot(data[element][:, 1], np.rad2deg(data[element][:, 4]), color=cmap(norm(reward['arr_0'][i])))
@@ -28,13 +28,14 @@ plt.colorbar(sm, ax=ax, label='Reward value')
 ax.grid()
 ax.set_xlabel('Position in x (m)')
 ax.set_ylabel('Position in y (m)')
-fig.savefig('imgs/random_actions_discrete_action.pdf')
+fig.savefig('imgs/windy_policy_pos.pdf')
 plt.colorbar(sm, ax=ax2, label='Reward value')
 ax2.grid()
 ax2.set_xlabel('Position in y (m)')
 ax2.set_ylabel('Pitch angle (deg)')
+ax2.set_ylim(-100, 100)
 ax2.invert_xaxis()
-fig2.savefig('imgs/random_actions_theta_discrete_action.pdf')
+fig2.savefig('imgs/windy_policy_theta.pdf')
 
 
 # ######## RUNS WITH POLICY ###########

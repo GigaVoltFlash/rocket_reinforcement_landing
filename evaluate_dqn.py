@@ -77,6 +77,6 @@ def evaluate_dqn(wind_path=None, weights_path='dqn_results/policy_net_weights_34
     return np.array(landed_episodes_in_epoch).shape[0]
 
 if __name__ == '__main__':
-    # evaluate_dqn()
-    evaluate_dqn(wind_path='./wind_data/wind_profile_11.csv', weights_path='dqn_results_wind/policy_net_weights_10.pt')
+    evaluate_dqn()
+    # evaluate_dqn(wind_path='./wind_data/wind_profile_11.csv', weights_path='dqn_results_wind/policy_net_weights_10.pt')
     # evaluate_dqn(wind_path='./wind_data/wind_profile_11.csv')

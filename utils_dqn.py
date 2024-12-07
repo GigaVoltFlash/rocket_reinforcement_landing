@@ -12,7 +12,7 @@ def plot_rewards(reward_buffer, show_result=False, test=False, save_folder='imgs
         plt.clf()
         plt.title('Training...')
     plt.xlabel('Episode')
-    plt.ylabel('Duration')
+    plt.ylabel('Reward')
     plt.grid()
     plt.plot(rewards.numpy())
     # Take 100 episode averages and plot them too
@@ -29,3 +29,5 @@ def plot_rewards(reward_buffer, show_result=False, test=False, save_folder='imgs
     plt.savefig(file_name)
     print(f'Plot saved to {file_name}')
     plt.close()
+
+

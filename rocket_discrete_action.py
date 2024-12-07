@@ -14,57 +14,7 @@ DEFAULT_Y = 1.0
 
 
 class StarshipEnvDiscrete():
-    """
-       ### Description
-    Inspired by the code from the inverted pendulum in OpenAI's gym environment.
 
-    The inverted pendulum swingup problem is based on the classic problem in control theory.
-    The system consists of a pendulum attached at one end to a fixed point, and the other end being free.
-    The pendulum starts in a random position and the goal is to apply torque on the free end to swing it
-    into an upright position, with its center of gravity right above the fixed point.
-
-    The diagram below specifies the coordinate system used for the implementation of the pendulum's
-    dynamic equations.
-
-    ![Pendulum Coordinate System](./diagrams/pendulum.png)
-
-    -  `x-y`: cartesian coordinates of the pendulum's end in meters.
-    - `theta` : angle in radians.
-    - `tau`: torque in `N m`. Defined as positive _counter-clockwise_.
-
-    ### Action Space
-
-    The action is a `ndarray` with shape `(2,)` representing the thrust and the gimbal angle of the engine.
-
-    ### Observation Space
-
-    UPDATE OBSERVATION SPACE DOCS HERE
-
-    ### Rewards
-
-    The reward function is defined as:
-
-    UPDATE REWARD FUNCTION INFORMATION HERE
-
-    ### Episode Truncation
-
-    The episode truncates at 200 time steps.
-
-    ### Arguments
-
-    - `g`: acceleration of gravity measured in *(m s<sup>-2</sup>)* used to calculate the pendulum dynamics.
-      The default value is g = 10.0 .
-
-    ```
-    gym.make('Pendulum-v1', g=9.81)
-    ```
-
-    ### Version History
-
-    * v1: Simplify the math equations, no difference in behavior.
-    * v0: Initial versions release (1.0.0)
-
-    """
     def __init__(self, path_to_bg_img=None, wind_profile_path=None):
 
         self.g = 9.8

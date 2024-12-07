@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.cm as cm  # for color maps
-from wind_profiles import generate_smooth_profile
 from sklearn import tree
 from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
 
 # Load wind files from wind database
 def load_wind_profiles(num_profiles=200, test=False):
@@ -124,7 +124,6 @@ success_label_test = np.load('./wind_evaluations_with_nowind_policy_test/success
 success_label_train_logic = np.where(success_label_train > 90, 1.0, 0.0)
 success_label_test_logic = np.where(success_label_test > 90, 1.0, 0.0)
 
-
 # Successes over windy policy
 windy_success_label_train = np.load('./wind_evaluations_with_windy_policy/success_with_different_winds.npz')['arr_0']
 windy_success_label_test = np.load('./wind_evaluations_with_windy_policy_test/success_with_different_winds.npz')['arr_0']
@@ -214,39 +213,56 @@ plt.savefig('./imgs/pca_wind_data_3d.pdf')
 # LOGISTIC REGRESSION REDUCED
 transformed_data = np.abs(train_winds[:, 20:21, 1])
 transformed_test_data = np.abs(test_winds[:, 20:21, 1])
-theta = logistic_regression(transformed_data, success_label_train_logic)
-y_predict = 1. / (1 + np.exp(-(transformed_data).dot(theta)))
-print(y_predict)
-print(success_label_train_logic)
-print(np.sqrt(np.mean((success_label_train_logic - np.clip(y_predict, 0.0, 1.0))**2)))
+# theta = logistic_regression(transformed_data, success_label_train_logic)
+# y_predict = 1. / (1 + np.exp(-(transformed_data).dot(theta)))
+# print(y_predict)
+# print(success_label_train_logic)
+# print(np.sqrt(np.mean((success_label_train_logic - np.clip(y_predict, 0.0, 1.0))**2)))
 
-y_predict = 1. / (1 + np.exp(-(transformed_test_data).dot(theta)))
-print(y_predict)
-print(success_label_test_logic)
-print(np.sqrt(np.mean((success_label_test_logic - np.clip(y_predict, 0.0, 1.0))**2)))
-print(theta)
-fig = plt.figure()
-plt.plot(train_winds[0, 20:21, 0], theta)
-plt.grid()
-plt.xlabel('Altitude of wind value (m)')
-plt.ylabel('Normalized importance to success percentage')
-plt.show()
+# y_predict = 1. / (1 + np.exp(-(transformed_test_data).dot(theta)))
+# print(y_predict)
+# print(success_label_test_logic)
+# print(np.sqrt(np.mean((success_label_test_logic - np.clip(y_predict, 0.0, 1.0))**2)))
+# print(theta)
+# fig = plt.figure()
+# plt.plot(train_winds[0, 20:21, 0], theta)
+# plt.grid()
+# plt.xlabel('Altitude of wind value (m)')
+# plt.ylabel('Normalized importance to success percentage')
+# plt.show()
 
+log_reg = LogisticRegression()
+log_reg.fit(train_winds[:, :, 1], success_label_train_logic)
+y_predict = log_reg.predict(train_winds[:, :, 1])
+equal_count = np.sum(y_predict == success_label_train_logic) 
+unequal_count = np.sum(y_predict != success_label_train_logic)
+accuracy = (equal_count)/(equal_count + unequal_count)
+print('Accuracy of logistic regression on the training data: ', accuracy)
+
+y_predict = log_reg.predict(test_winds[:, :, 1])
+equal_count = np.sum(y_predict == success_label_test_logic) 
+unequal_count = np.sum(y_predict != success_label_test_logic)
+accuracy = (equal_count)/(equal_count + unequal_count)
+print('Accuracy of logistic regression on the test data: ', accuracy)
 
 # DECISION TREE SKLEARN (WORKS)
 
 clf = tree.DecisionTreeClassifier()
 clf = clf.fit(train_winds[:, :, 1], success_label_train_logic)
 y_predict = clf.predict(train_winds[:, :, 1])
-print(np.sqrt(np.mean((success_label_train_logic- np.clip(y_predict, 0.0, 1.0))**2)))
-
+equal_count = np.sum(y_predict == success_label_train_logic) 
+unequal_count = np.sum(y_predict != success_label_train_logic)
+accuracy = (equal_count)/(equal_count + unequal_count)
+print('Accuracy of decision tree on the train data: ', accuracy)
 y_predict = clf.predict(test_winds[:, :, 1])
-print(np.sqrt(np.mean((success_label_test_logic- np.clip(y_predict, 0.0, 1.0))**2)))
+equal_count = np.sum(y_predict == success_label_test_logic) 
+unequal_count = np.sum(y_predict != success_label_test_logic)
+accuracy = (equal_count)/(equal_count + unequal_count)
+print('Accuracy of decision tree on the test data: ', accuracy)
 
 plt.figure(figsize=(10, 8)) 
 tree.plot_tree(clf)
 plt.savefig('./imgs/decision_tree_classifier.pdf') 
-
 
 # #### PLOTTING ###
 fig = plt.figure()
@@ -275,6 +291,9 @@ ax.set_xlabel('Wind lateral force (N)')
 ax.set_ylabel('Altitude (m)')
 fig.savefig('imgs/success_of_different_winds.pdf')
 
+total_successes = np.sum(success_label_train_logic)
+print('Total train success with no-wind: ', total_successes)
+
 # Windy Policy
 fig,ax = plt.subplots()
 cmap = cm.viridis  # You can use other colormaps, like cm.plasma, cm.inferno, etc.
@@ -289,4 +308,7 @@ ax.grid()
 ax.set_xlabel('Wind lateral force (N)')
 ax.set_ylabel('Altitude (m)')
 fig.savefig('imgs/success_of_different_winds_windy.pdf')
+
+total_successes = np.sum(windy_success_label_train_logic)
+print('Total train success with windy policy: ', total_successes)
 
